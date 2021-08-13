@@ -1,0 +1,105 @@
+package converter;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Scanner;
+
+import static java.math.RoundingMode.HALF_UP;
+
+public class Main {
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("Enter two numbers in format: {source base} {target base} (To quit type /exit)");
+            String a = scanner.next();
+            if (a.equals("/exit")) {
+                break;
+            }
+            String b = scanner.next();
+            int sourceBase = Integer.parseInt(a);
+            int targetBase = Integer.parseInt(b);
+            while (true) {
+                System.out.printf("Enter number in base %s to convert to base %s (To go back type /back)\n", sourceBase, targetBase);
+                String number = scanner.next();
+                StringBuilder part1;
+                StringBuilder part2;
+                if (number.equals("/back")) {
+                    System.out.println();
+                    break;
+                } else {
+                    part1 = new StringBuilder();
+                    part2 = new StringBuilder();
+                    boolean dot = true;
+                    char[] ss = number.toCharArray();
+                    for (char s : ss) {
+                        if (Character.getNumericValue(s) == -1) {
+                            dot = false;
+                            continue;
+                        }
+                        if (dot) {
+                            part1.append(s);
+                        } else {
+                            part2.append(s);
+                        }
+                    }
+                    String result1 = new BigInteger(String.valueOf(part1), sourceBase).toString(targetBase);
+                    if (dot) {
+                        System.out.println("Conversion result: " + result1);
+                    } else if (sourceBase == 10) {
+                        String result2 = String.valueOf(part2);
+                        result2 = anyPow(result2, targetBase);
+                        System.out.println("Conversion result: " + result1 + "." + result2);
+                    } else if (targetBase == 10) {
+                        String result2 = String.valueOf(part2);
+                        result2 = tenPow(result2, sourceBase);
+                        System.out.println("Conversion result: " + result1 + result2);
+                    } else {
+                        String result2 = String.valueOf(part2);
+                        result2 = tenPow(result2, sourceBase);
+                        result2 = anyPow(result2, targetBase);
+                        System.out.println("Conversion result: " + result1 + "." + result2);
+                    }
+                    System.out.println();
+                }
+            }
+        }
+    }
+
+    public static String tenPow(String result, int sourceBase) {
+        char[] ss = result.toCharArray();
+        double decimal = 0;
+        int pow = -1;
+        for (char s : ss) {
+            decimal = decimal + Character.getNumericValue(s) * Math.pow(sourceBase, pow);
+            pow--;
+        }
+        BigDecimal finish = new BigDecimal(decimal);
+        BigDecimal scaledFinish;
+        scaledFinish = finish.setScale(5, HALF_UP);
+        return String.valueOf(scaledFinish);
+    }
+
+    public static String anyPow(String result, int targetBase) {
+        double decimal;
+        StringBuilder fraction = new StringBuilder();
+        if (result.contains(".")) {
+            decimal = Double.parseDouble(result);
+        } else {
+            decimal = Double.parseDouble("0." + result);
+        }
+        int integer;
+        for (int i = 0; i < 5; i++) {
+            decimal = decimal * targetBase;
+            integer = (int) decimal;
+            decimal = decimal - integer;
+            char ch = Character.forDigit(integer, targetBase);
+            fraction.append(ch);
+            if (decimal == 0) {
+                fraction.append("0".repeat(4 - i));
+                break;
+            }
+        }
+        return String.valueOf(fraction);
+    }
+}
